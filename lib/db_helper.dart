@@ -2,48 +2,37 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DBHelper {
-  static final DBHelper instance = DBHelper._init();
-  static Database? _database;
+  static Database? _db;
 
-  DBHelper._init();
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('matches.db');
-    return _database!;
+  static Future<Database> get database async {
+    _db ??= await _initDb();
+    return _db!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+  static Future<Database> _initDb() async {
+    final path = join(await getDatabasesPath(), 'predictions.db');
 
-    return await openDatabase(
+    return openDatabase(
       path,
       version: 1,
-      onCreate: _createDB,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            predicted REAL,
+            confidence REAL,
+            odds REAL,
+            edge REAL,
+            kelly REAL,
+            createdAt TEXT
+          )
+        ''');
+      },
     );
   }
 
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-    CREATE TABLE matches(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      home TEXT NOT NULL,
-      away TEXT NOT NULL,
-      date TEXT NOT NULL,
-      homeAvg REAL NOT NULL,
-      awayAvg REAL NOT NULL
-    )
-    ''');
-  }
-
-  Future<int> insertMatch(Map<String, dynamic> match) async {
-    final db = await instance.database;
-    return await db.insert('matches', match);
-  }
-
-  Future<List<Map<String, dynamic>>> getMatches() async {
-    final db = await instance.database;
-    return await db.query('matches', orderBy: 'id DESC');
+  static Future<void> save(Map<String, dynamic> data) async {
+    final db = await database;
+    await db.insert('predictions', data);
   }
 }

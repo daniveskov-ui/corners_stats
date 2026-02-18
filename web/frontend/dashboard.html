@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Fund Manager v3</title>
+<style>
+
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+}
+
+.card {
+    background: #1e293b;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+.big {
+    font-size: 28px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>AI Fund Manager v3</h1>
+
+<div class="card">
+<div>Bankroll</div>
+<div class="big" id="bankroll">$0</div>
+</div>
+
+<div class="card">
+<div>Win Rate</div>
+<div class="big" id="winrate">0%</div>
+</div>
+
+<div class="card">
+<div>Risk of Ruin</div>
+<div class="big" id="ror">0%</div>
+</div>
+
+<button onclick="simulate()">Run Simulation</button>
+
+<script>
+
+async function load() {
+
+    const res = await fetch("/api/status");
+    const data = await res.json();
+
+    document.getElementById("bankroll").innerText =
+        "$" + data.bankroll.toFixed(2);
+
+    document.getElementById("winrate").innerText =
+        (data.winRate*100).toFixed(1)+"%";
+
+    document.getElementById("ror").innerText =
+        (data.riskOfRuin*100).toFixed(1)+"%";
+}
+
+async function simulate() {
+
+    await fetch("/api/simulate", {
+        method: "POST"
+    });
+
+    load();
+}
+
+load();
+
+</script>
+
+</body>
+</html>

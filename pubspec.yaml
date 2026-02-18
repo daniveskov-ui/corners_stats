@@ -1,25 +1,28 @@
 name: corners_stats
-description: Приложение за статистика на корнери
+description: Corners stats app
 publish_to: "none"
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+
   flutter:
     sdk: flutter
+  http: ^1.2.0
+  fl_chart: ^0.68.0
+  intl: ^0.18.1
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  flutter_dotenv: ^5.1.0
+  shared_preferences: ^2.2.2
 
-  http: ^1.6.0
-  sqflite: ^2.0.0+4
-  path: ^1.9.1
-  path_provider: ^2.0.15
-  charts_flutter: ^0.12.0
-  intl: ^0.17.0
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.2
 
 flutter:
   uses-material-design: true

@@ -3,103 +3,82 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 
+const monteCarloEngine = require("./monteCarloEngine");
+const kellyMonteCarloEngine = require("./kellyMonteCarloEngine");
+const bankrollSimulator = require("./bankrollGrowthSimulator");
+
 const app = express();
 
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-
-/*
-==============================
-HEALTH CHECK
-==============================
-*/
-
+//
+// HEALTH CHECK
+//
 app.get("/", (req, res) => {
-
     res.json({
-        status: "HEDGE FUND AI RUNNING",
-        timestamp: new Date(),
-        uptime: process.uptime()
+        status: "AI FUND MANAGER LIVE",
+        version: "PRODUCTION v3",
+        port: PORT
     });
-
 });
 
+//
+// MONTE CARLO
+//
+app.get("/api/montecarlo", (req, res) => {
 
-/*
-==============================
-STATUS
-==============================
-*/
-
-app.get("/api/status", (req, res) => {
-
-    res.json({
-
-        system: "ONLINE",
-
-        bankroll:
-            process.env.BANKROLL || 1000,
-
-        environment:
-            process.env.NODE_ENV || "production",
-
-        timestamp:
-            new Date()
-
+    const result = monteCarloEngine.runSimulation({
+        bankroll: 1000,
+        edge: 0.05,
+        odds: 2.0,
+        bets: 1000
     });
 
+    res.json(result);
 });
 
+//
+// KELLY MONTE CARLO
+//
+app.get("/api/kelly", (req, res) => {
 
-/*
-==============================
-TEST AUTO PROFIT
-==============================
-*/
-
-app.get("/api/auto-profit", (req, res) => {
-
-    const bankroll =
-        Number(process.env.BANKROLL) || 1000;
-
-    res.json({
-
-        bankroll,
-
-        expectedProfit:
-            (bankroll * 0.12).toFixed(2),
-
-        roi: "12%",
-
-        bets: [
-
-            {
-                team: "Demo Bet",
-                edge: "8.5%",
-                odds: 2.10,
-                stake: (bankroll * 0.02).toFixed(2)
-            }
-
-        ]
-
+    const result = kellyMonteCarloEngine.runSimulation({
+        bankroll: 1000,
+        edge: 0.05,
+        odds: 2.0,
+        bets: 500
     });
 
+    res.json(result);
 });
 
+//
+// BANKROLL PROJECTION
+//
+app.get("/api/bankroll", (req, res) => {
 
-/*
-==============================
-START SERVER
-==============================
-*/
+    const result = bankrollSimulator.simulateGrowth({
+        bankroll: 1000,
+        days: 30,
+        edge: 0.04
+    });
 
+    res.json(result);
+});
+
+//
+// SERVE FRONTEND
+//
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+//
+// START SERVER
+//
 app.listen(PORT, () => {
-
     console.log("=================================");
-    console.log("HEDGE FUND AI DEPLOYED");
+    console.log("AI FUND MANAGER LIVE");
     console.log("PORT:", PORT);
     console.log("=================================");
-
 });

@@ -17,10 +17,38 @@ function simulateGrowth({
 }) {
 
     const history = [];
-
     let balance = bankroll;
-
 
     for (let d = 1; d <= days; d++) {
 
-        for
+        for (let b = 0; b < betsPerDay; b++) {
+
+            const stake = balance * stakePercent;
+
+            const winProbability = (1 / odds) + edge;
+
+            if (Math.random() < winProbability) {
+                balance += stake * (odds - 1);
+            } else {
+                balance -= stake;
+            }
+
+        }
+
+        history.push({
+            day: d,
+            balance: balance
+        });
+    }
+
+    return {
+        startBankroll: bankroll,
+        finalBankroll: balance,
+        days,
+        history
+    };
+}
+
+module.exports = {
+    simulateGrowth
+};

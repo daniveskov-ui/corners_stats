@@ -1,3 +1,4 @@
+const pool = require("./db");
 require("dotenv").config();
 
 const express = require("express");
@@ -72,6 +73,28 @@ app.get("/api/bankroll", (req, res) => {
 // SERVE FRONTEND
 //
 app.use(express.static(path.join(__dirname, "../frontend")));
+
+async function initDB() {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS simulations (
+                id SERIAL PRIMARY KEY,
+                type VARCHAR(50),
+                bankroll_start NUMERIC,
+                bankroll_end NUMERIC,
+                edge NUMERIC,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log("Database initialized");
+    } catch (err) {
+        console.error("DB init error:", err);
+    }
+}
+
+initDB();
+
 
 //
 // START SERVER

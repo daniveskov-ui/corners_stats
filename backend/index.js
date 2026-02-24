@@ -32,15 +32,39 @@ app.get("/", (req, res) => {
 //
 app.get("/api/montecarlo", (req, res) => {
 
-    const result = monteCarloEngine.runSimulation({
-        bankroll: 1000,
-        edge: 0.05,
-        odds: 2.0,
-        bets: 1000
-    });
+    try {
 
-    res.json(result);
+        const {
+            bankroll = 1000,
+            edge = 0.04,
+            odds = 2.0,
+            simulations = 5000,
+            betsPerDay = 10,
+            days = 30,
+            kellyCap = 0.25
+        } = req.query;
+
+        const result = monteCarloEngine.runSimulation({
+            bankroll: Number(bankroll),
+            baseEdge: Number(edge),
+            odds: Number(odds),
+            simulations: Number(simulations),
+            betsPerDay: Number(betsPerDay),
+            days: Number(days),
+            kellyCap: Number(kellyCap)
+        });
+
+        res.json(result);
+
+    } catch (error) {
+
+        console.error("Monte Carlo Error:", error);
+        res.status(500).json({ error: error.message });
+
+    }
+
 });
+
 
 //
 // KELLY MONTE CARLO

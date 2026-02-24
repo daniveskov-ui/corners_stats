@@ -5,12 +5,6 @@ INSTITUTIONAL GRADE
 ========================================
 */
 
-/*
-========================================
-KELLY CALCULATOR
-========================================
-*/
-
 function kellyFraction(edge, odds) {
     const b = odds - 1;
     const p = (1 / odds) + edge;
@@ -21,22 +15,10 @@ function kellyFraction(edge, odds) {
     return Math.max(0, Math.min(kelly, 0.25));
 }
 
-/*
-========================================
-DYNAMIC EDGE GENERATOR
-========================================
-*/
-
 function randomEdge(baseEdge = 0.04) {
     const variance = (Math.random() - 0.5) * 0.04;
     return Math.max(-0.02, baseEdge + variance);
 }
-
-/*
-========================================
-MAIN SIMULATION
-========================================
-*/
 
 function runSimulation({
 
@@ -105,26 +87,13 @@ function runSimulation({
 
     return {
 
-        startingBankroll:
-            bankroll.toFixed(2),
-
-        expectedBankroll:
-            avg.toFixed(2),
-
-        medianBankroll:
-            p50.toFixed(2),
-
-        bestCase:
-            best.toFixed(2),
-
-        worstCase:
-            worst.toFixed(2),
-
-        percentile10:
-            p10.toFixed(2),
-
-        percentile90:
-            p90.toFixed(2),
+        startingBankroll: bankroll.toFixed(2),
+        expectedBankroll: avg.toFixed(2),
+        medianBankroll: p50.toFixed(2),
+        bestCase: best.toFixed(2),
+        worstCase: worst.toFixed(2),
+        percentile10: p10.toFixed(2),
+        percentile90: p90.toFixed(2),
 
         riskOfRuin:
             ((ruinCount / simulations) * 100).toFixed(2) + "%",

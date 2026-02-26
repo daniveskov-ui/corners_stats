@@ -9,6 +9,7 @@ const path = require("path");
 const monteCarloEngine = require("./monteCarloEngine");
 const kellyMonteCarloEngine = require("./kellyMonteCarloEngine");
 const bankrollSimulator = require("./bankrollGrowthSimulator");
+const portfolioEngine = require("./portfolioEngine");
 
 const app = express();
 
@@ -38,10 +39,12 @@ app.get("/api/montecarlo", (req, res) => {
             bankroll = 1000,
             edge = 0.04,
             odds = 2.0,
-            simulations = 5000,
+            simulations = 3000,
             betsPerDay = 10,
             days = 30,
-            kellyCap = 0.25
+            strategy = "kelly",
+            kellyFractionMultiplier = 0.5,
+            flatStakePercent = 0.02
         } = req.query;
 
         const result = monteCarloEngine.runSimulation({
@@ -51,16 +54,16 @@ app.get("/api/montecarlo", (req, res) => {
             simulations: Number(simulations),
             betsPerDay: Number(betsPerDay),
             days: Number(days),
-            kellyCap: Number(kellyCap)
+            strategy,
+            kellyFractionMultiplier: Number(kellyFractionMultiplier),
+            flatStakePercent: Number(flatStakePercent)
         });
 
         res.json(result);
 
     } catch (error) {
-
         console.error("Monte Carlo Error:", error);
         res.status(500).json({ error: error.message });
-
     }
 
 });
@@ -130,4 +133,37 @@ app.listen(PORT, () => {
     console.log("AI FUND MANAGER LIVE");
     console.log("PORT:", PORT);
     console.log("=================================");
+});
+
+//
+// PORTFOLIO ENGINE
+//
+app.get("/api/portfolio", (req, res) => {
+
+    try {
+
+        const {
+            bankroll = 1000,
+            days = 60,
+            betsPerDay = 5,
+            simulations = 2000
+        } = req.query;
+
+        const result =
+            portfolioEngine.runPortfolioSimulation({
+                bankroll: Number(bankroll),
+                days: Number(days),
+                betsPerDay: Number(betsPerDay),
+                simulations: Number(simulations)
+            });
+
+        res.json(result);
+
+    } catch (error) {
+
+        console.error("Portfolio Engine Error:", error);
+        res.status(500).json({ error: error.message });
+
+    }
+
 });

@@ -1,27 +1,22 @@
 /*
 ========================================
-INSTITUTIONAL MONTE CARLO ENGINE
+STRATEGY ENGINE V3
+Institutional Quant Version
 ========================================
 
-Features:
-• Dynamic edge
-• Kelly sizing with cap
-• Risk of ruin
-• Max drawdown
-• Sharpe ratio
-• Percentiles
+Modes:
+- kelly
+- fractional
+- flat
+- adaptive
 ========================================
 */
 
-function kellyFraction(edge, odds, kellyCap = 0.25) {
-
+function kellyFraction(edge, odds) {
     const b = odds - 1;
     const p = (1 / odds) + edge;
     const q = 1 - p;
-
-    const kelly = ((b * p) - q) / b;
-
-    return Math.max(0, Math.min(kelly, kellyCap));
+    return ((b * p) - q) / b;
 }
 
 function randomEdge(baseEdge = 0.04) {
@@ -34,10 +29,12 @@ function runSimulation({
     bankroll = 1000,
     baseEdge = 0.04,
     odds = 2.0,
-    simulations = 5000,
+    simulations = 3000,
     betsPerDay = 10,
     days = 30,
-    kellyCap = 0.25
+    strategy = "kelly",
+    kellyFractionMultiplier = 0.5,   // fractional mode
+    flatStakePercent = 0.02          // flat mode
 
 }) {
 
@@ -50,14 +47,42 @@ function runSimulation({
         let balance = bankroll;
         let peak = bankroll;
         let maxDrawdown = 0;
+        let dynamicMultiplier = kellyFractionMultiplier;
 
         for (let d = 0; d < days; d++) {
 
             for (let b = 0; b < betsPerDay; b++) {
 
                 const edge = randomEdge(baseEdge);
-                const kelly = kellyFraction(edge, odds, kellyCap);
-                const stake = balance * kelly;
+                const rawKelly = kellyFraction(edge, odds);
+
+                let stakePercent = 0;
+
+                // STRATEGY SWITCH
+                if (strategy === "kelly") {
+                    stakePercent = Math.max(0, Math.min(rawKelly, 0.25));
+                }
+
+                if (strategy === "fractional") {
+                    stakePercent = Math.max(0, rawKelly * kellyFractionMultiplier);
+                }
+
+                if (strategy === "flat") {
+                    stakePercent = flatStakePercent;
+                }
+
+                if (strategy === "adaptive") {
+
+                    // reduce risk if drawdown grows
+                    if (maxDrawdown > 0.30) {
+                        dynamicMultiplier = 0.25;
+                    }
+
+                    stakePercent =
+                        Math.max(0, rawKelly * dynamicMultiplier);
+                }
+
+                const stake = balance * stakePercent;
                 const winProb = (1 / odds) + edge;
 
                 if (Math.random() < winProb) {
@@ -80,7 +105,9 @@ function runSimulation({
             if (balance <= 0) break;
         }
 
-        globalMaxDrawdown = Math.max(globalMaxDrawdown, maxDrawdown);
+        globalMaxDrawdown =
+            Math.max(globalMaxDrawdown, maxDrawdown);
+
         results.push(balance);
     }
 
@@ -90,16 +117,9 @@ function runSimulation({
     const sorted =
         [...results].sort((a, b) => a - b);
 
-    const p10 =
-        sorted[Math.floor(simulations * 0.10)];
-
     const p50 =
         sorted[Math.floor(simulations * 0.50)];
 
-    const p90 =
-        sorted[Math.floor(simulations * 0.90)];
-
-    // Sharpe ratio
     const returns =
         results.map(r => (r - bankroll) / bankroll);
 
@@ -117,29 +137,19 @@ function runSimulation({
         stdDev === 0 ? 0 : meanReturn / stdDev;
 
     return {
-
+        strategy,
         startingBankroll: bankroll.toFixed(2),
         expectedBankroll: avg.toFixed(2),
         medianBankroll: p50.toFixed(2),
-        percentile10: p10.toFixed(2),
-        percentile90: p90.toFixed(2),
-
         riskOfRuin:
             ((ruinCount / simulations) * 100).toFixed(2) + "%",
-
         maxDrawdown:
             (globalMaxDrawdown * 100).toFixed(2) + "%",
-
         sharpeRatio:
             sharpe.toFixed(2),
-
-        recommendedKelly:
-            (kellyFraction(baseEdge, odds, kellyCap) * 100).toFixed(2) + "%",
-
         simulations,
         days,
-        betsPerDay,
-        kellyCap
+        betsPerDay
     };
 }
 

@@ -23,12 +23,10 @@ function normalizeWeights(strategies) {
 }
 
 function runPortfolioSimulation({
-
     bankroll = 1000,
     days = 60,
     betsPerDay = 5,
     simulations = 2000
-
 }) {
 
     const baseStrategies = [
@@ -46,7 +44,6 @@ function runPortfolioSimulation({
         let balance = bankroll;
         let peak = bankroll;
 
-        // Deep copy strategies
         let strategies = JSON.parse(JSON.stringify(baseStrategies));
 
         for (let d = 0; d < days; d++) {
@@ -60,22 +57,18 @@ function runPortfolioSimulation({
                     const edge = randomEdge(strategy.edge);
                     const kelly = kellyFraction(edge, strategy.odds);
 
-                    const stake =
-                        balance * strategy.weight * kelly;
-
-                    const winProb =
-                        (1 / strategy.odds) + edge;
+                    const stake = balance * strategy.weight * kelly;
+                    const winProb = (1 / strategy.odds) + edge;
 
                     let pnl = 0;
 
                     if (Math.random() < winProb) {
                         pnl = stake * (strategy.odds - 1);
-                        balance += pnl;
                     } else {
                         pnl = -stake;
-                        balance += pnl;
                     }
 
+                    balance += pnl;
                     strategy.performance += pnl;
 
                     if (balance <= 0) {
@@ -86,17 +79,14 @@ function runPortfolioSimulation({
                 }
             });
 
-            // Adaptive reweighting (daily)
-
+            // Adaptive reweighting
             const totalPerf =
                 strategies.reduce((sum, s) => sum + s.performance, 0);
 
             if (totalPerf !== 0) {
                 strategies.forEach(s => {
-                    const relativePerf =
-                        s.performance / totalPerf;
-
-                    s.weight += relativePerf * 0.05; // adjustment speed
+                    const relativePerf = s.performance / totalPerf;
+                    s.weight += relativePerf * 0.05;
                     s.weight = Math.max(0.05, Math.min(0.7, s.weight));
                 });
             }
@@ -149,4 +139,9 @@ function runPortfolioSimulation({
         simulations,
         days,
         betsPerDay
-   
+    };
+}
+
+module.exports = {
+    runPortfolioSimulation
+};
